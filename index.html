@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X文字数カウントツール</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #f5f8fa;
+  margin: 0;
+  padding: 16px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.count {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.copy {
+  background: #1d9bf0;
+  color: white;
+}
+
+.clear {
+  background: #e0245e;
+  color: white;
+}
+
+.over { color: red; }
+.ok { color: green; }
+
+.preview-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.link {
+  color: #1d9bf0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: #ccc;
+  border-radius: 50%;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>X文字数カウント</h2>
+
+<textarea id="input" placeholder="投稿を入力..."></textarea>
+
+<div class="count">
+  <span id="count">0</span>
+  <span id="remain">280</span>
+</div>
+
+<div class="buttons">
+  <button class="copy" onclick="copyText()">コピー</button>
+  <button class="clear" onclick="clearText()">クリア</button>
+</div>
+
+<!-- プレビュー -->
+<div class="card">
+  <div class="header">
+    <div class="avatar"></div>
+    <div>
+      <div><b>ユーザー名</b></div>
+      <div style="color:gray">@username</div>
+    </div>
+  </div>
+
+  <div id="preview" class="preview-text" style="margin-top:10px;">
+    投稿内容がここに表示されます
+  </div>
+</div>
+
+</div>
+
+<script>
+const input = document.getElementById("input");
+const countEl = document.getElementById("count");
+const remainEl = document.getElementById("remain");
+const preview = document.getElementById("preview");
+
+const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+const hashtagRegex = /#[\wぁ-んァ-ン一-龥]+/g;
+
+function countX(text) {
+  let total = 0;
+  const urls = text.match(urlRegex) || [];
+  total += urls.length * 23;
+
+  const noUrl = text.replace(urlRegex, "");
+  for (let char of noUrl) {
+    if (char === "\n") total++;
+    else if (/[\x00-\x7F]/.test(char)) total++;
+    else total += 2;
+  }
+  return total;
+}
+
+function formatText(text) {
+  return text
+    .replace(urlRegex, (url) => `<span class="link">${url}</span>`)
+    .replace(hashtagRegex, (tag) => `<span class="link">${tag}</span>`);
+}
+
+// ✅ コピー
+function copyText() {
+  navigator.clipboard.writeText(input.value);
+  alert("コピーしました");
+}
+
+// ✅ クリア
+function clearText() {
+  input.value = "";
+  update();
+}
+
+// 更新処理
+function update() {
+  const text = input.value;
+
+  const count = countX(text);
+  const remain = 280 - count;
+
+  countEl.textContent = "文字数: " + count;
+  remainEl.textContent = "残り: " + remain;
+  remainEl.className = remain < 0 ? "over" : "ok";
+
+  preview.innerHTML = text
+    ? formatText(text)
+    : "投稿内容がここに表示されます";
+}
+
+input.addEventListener("input", update);
+</script>
+
+</body>
+</html>
