@@ -183,7 +183,11 @@ function shortenURL(url) {
   try {
     const fullUrl = url.startsWith("http") ? url : "https://" + url;
     const u = new URL(fullUrl);
-    return u.hostname + "/…";
+
+    // ✅ www を削除
+    let hostname = u.hostname.replace(/^www\./, "");
+
+    return hostname + "/…";
   } catch {
     return url;
   }
