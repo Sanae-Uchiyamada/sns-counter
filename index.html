@@ -39,6 +39,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
+  font-weight: bold;
 }
 
 .buttons {
@@ -74,8 +75,32 @@ button {
   word-break: break-word;
 }
 
-.link {
+a.link {
   color: #1d9bf0;
+  text-decoration: none;
+}
+a.link:hover {
+  text-decoration: underline;
+}
+
+/* トースト */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .header {
@@ -96,13 +121,13 @@ button {
 <body>
 <div class="container">
 
-<h2>X文字数カウント</h2>
+<h2>X 投稿チェックツール</h2>
 
 <textarea id="input" placeholder="投稿を入力..."></textarea>
 
 <div class="count">
-  <span id="count">0</span>
-  <span id="remain">280</span>
+  <span id="count">文字数: 0</span>
+  <span id="remain">残り: 280</span>
 </div>
 
 <div class="buttons">
@@ -136,30 +161,64 @@ const preview = document.getElementById("preview");
 const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
 const hashtagRegex = /#[\wぁ-んァ-ン一-龥]+/g;
 
+// ✅ X文字数カウント
 function countX(text) {
   let total = 0;
   const urls = text.match(urlRegex) || [];
   total += urls.length * 23;
 
   const noUrl = text.replace(urlRegex, "");
+
   for (let char of noUrl) {
     if (char === "\n") total++;
     else if (/[\x00-\x7F]/.test(char)) total++;
     else total += 2;
   }
+
   return total;
 }
 
+// ✅ URL短縮表示
+function shortenURL(url) {
+  try {
+    const u = new URL(url.startsWith("http") ? url : "https://" + url);
+    return u.hostname + "/…";
+  } catch {
+    return url;
+  }
+}
+
+// ✅ テキスト整形（URL・ハッシュタグ）
 function formatText(text) {
   return text
-    .replace(urlRegex, (url) => `<span class="link">${url}</span>`)
+    .replace(urlRegex, (url) => {
+      const display = shortenURL(url);
+      const href = url.startsWith("http") ? url : "https://" + url;
+      return `${href}${display}</a>`;
+    })
     .replace(hashtagRegex, (tag) => `<span class="link">${tag}</span>`);
+}
+
+// ✅ トースト
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("show"), 10);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
 }
 
 // ✅ コピー
 function copyText() {
   navigator.clipboard.writeText(input.value);
-  alert("コピーしました");
+  showToast("コピーしました ✅");
 }
 
 // ✅ クリア
@@ -168,7 +227,7 @@ function clearText() {
   update();
 }
 
-// 更新処理
+// ✅ 更新処理
 function update() {
   const text = input.value;
 
