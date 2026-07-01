@@ -181,24 +181,28 @@ function countX(text) {
 // ✅ URL短縮表示
 function shortenURL(url) {
   try {
-    const u = new URL(url.startsWith("http") ? url : "https://" + url);
+    const fullUrl = url.startsWith("http") ? url : "https://" + url;
+    const u = new URL(fullUrl);
     return u.hostname + "/…";
   } catch {
     return url;
   }
 }
 
-// ✅ テキスト整形（URL・ハッシュタグ）
 function formatText(text) {
   return text
     .replace(urlRegex, (url) => {
       const display = shortenURL(url);
       const href = url.startsWith("http") ? url : "https://" + url;
-      return `${href}${display}</a>`;
-    })
-    .replace(hashtagRegex, (tag) => `<span class="link">${tag}</span>`);
-}
 
+      // ✅ 元のURLを完全に置き換える
+      return `<a href="${href}" target="_blank" class="link">${display}</a>`;
+    })
+    .replace(hashtagRegex, (tag) =>
+      `<span class="link">${tag}</span>`
+    );
+}
+``
 // ✅ トースト
 function showToast(message) {
   const toast = document.createElement("div");
